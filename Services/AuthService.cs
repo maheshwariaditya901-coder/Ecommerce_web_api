@@ -1,21 +1,27 @@
-﻿using Ecommerce_web_api.Data;
-using Ecommerce_web_api.DTOs.Auth;
-using Ecommerce_web_api.Models;
-using Microsoft.EntityFrameworkCore;
+﻿    using Ecommerce_web_api.Data;
+    using Ecommerce_web_api.DTOs.Auth;
+    using Ecommerce_web_api.Models;
+    using Microsoft.EntityFrameworkCore;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Security.Claims;
+    using System.Text;
+    using Microsoft.IdentityModel.Tokens;
 
 namespace Ecommerce_web_api.Services
-{
+    {
     public class AuthService
     {
         public readonly ApplicationDbContext _context;
+        private readonly IConfiguration _config;
 
-        public AuthService(ApplicationDbContext context)
+        public AuthService(ApplicationDbContext context , IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         public async Task<string> Register(RegisterUserDto request)
-        { 
+        {
             // Check if email already exists
             var existingUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == request.Email);
 
@@ -23,7 +29,7 @@ namespace Ecommerce_web_api.Services
                 return "Email already registered";
 
             // Validate Role (VERY IMPORTANT)
-            string[] allowedRoles = new string[] { "User", "Seller" };
+            string[] allowedRoles =  { "User", "Seller" , "Admin"};
 
             if (!allowedRoles.Contains(request.Role))
                 return "Invalid role selected";
@@ -31,7 +37,7 @@ namespace Ecommerce_web_api.Services
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            
+
             var user = new User
             {
                 Name = request.Name,
@@ -40,11 +46,71 @@ namespace Ecommerce_web_api.Services
                 Role = request.Role,
                 PasswordHash = passwordHash
             };
- 
-            _context.Users.Add(user);
+
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
+
+            if (request.Role == "Seller")
+            {
+                var seller = new Seller
+                {
+                     
+                    StoreName = request.StoreName,
+                    UserId = user.Id,
+                    Address = request.Address
+                };
+                _context.Sellers.Add(seller);
+                await _context.SaveChangesAsync();
+            }
 
             return "Registration successful";
         }
+
+        public async Task<LoginResponseDto> Login(LoginUserDto user)
+        {
+            var userExists = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == user.Email);
+
+            if (userExists == null)
+                return new LoginResponseDto { Message = "User not found" };
+
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, userExists.PasswordHash);
+
+            if (!isPasswordValid)
+                return new LoginResponseDto { Message = "Password is not correct" };
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Email, userExists.Email),
+        new Claim(ClaimTypes.Role, userExists.Role)
+    }; 
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"])
+);
+
+            var creds = new SigningCredentials(
+                key,
+                SecurityAlgorithms.HmacSha256
+            );
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddHours(2),
+                signingCredentials: creds
+            );
+
+
+            return new LoginResponseDto
+            {
+                Message = "Login successful",
+                JwtToken = new JwtSecurityTokenHandler().WriteToken(token),
+                User = userExists
+            };
+
+        }
+
+
     }
-}
+  }

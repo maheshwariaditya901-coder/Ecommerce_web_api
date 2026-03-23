@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Ecommerce_web_api.Models
 {
@@ -25,5 +26,11 @@ namespace Ecommerce_web_api.Models
         public string Role { get; set; } = string.Empty;  // Admin, Seller, User
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation property for seller
+        public Seller Seller { get; set; }
+
+        [JsonIgnore]
+        public List<Products> Products { get; set; } 
     }
 }

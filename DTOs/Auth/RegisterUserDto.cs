@@ -26,5 +26,9 @@ namespace Ecommerce_web_api.DTOs.Auth
 
         [Required]
         public string Role { get; set; } = string.Empty; // "User" or "Seller"
+
+        // Optional for Seller
+        public string StoreName { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
     }
 }
