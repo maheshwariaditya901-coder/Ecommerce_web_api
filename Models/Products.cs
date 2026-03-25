@@ -19,5 +19,7 @@ namespace Ecommerce_web_api.Models
 
         [JsonIgnore]
         public User? User { get; set; }
+
+        public string Status { get; set; } = "Pending";
     }
 }

@@ -31,6 +31,8 @@ namespace Ecommerce_web_api.Models
         public Seller Seller { get; set; }
 
         [JsonIgnore]
-        public List<Products> Products { get; set; } 
+        public List<Products> Products { get; set; }
+
+        public bool IsActive { get; set; } = true;
     }
 }

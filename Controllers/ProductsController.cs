@@ -37,6 +37,79 @@ namespace Ecommerce_web_api.Controllers
             return Ok(products);
         }
 
+        [HttpPut("EditProduct/{id}")]
+        public async Task<IActionResult> EditProduct(int id , Products updatedProduct)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound("product not found");
+            }
 
+            product.Name = updatedProduct.Name;
+            product.Description = updatedProduct.Description;
+            product.Price = updatedProduct.Price;
+            product.Stock = updatedProduct.Stock;
+
+            await _context.SaveChangesAsync(); 
+
+            return Ok(product);
+
+             
+        }
+
+        [HttpDelete("delete/{id}")]
+
+        public async Task<IActionResult> deleteProduct(int id)
+        {
+            var product = _context.Products.Find(id);
+
+            if (product == null)
+            {
+                return NotFound("no such product");
+            }
+
+            _context.Products.Remove(product);
+
+            await _context.SaveChangesAsync();
+
+            return Ok("product deleted");
+        }
+
+
+        [HttpPatch("UpdateStatus/{id}")]
+        public async Task<IActionResult> changeStatus(int id, string newstatus)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return NotFound("no such product");
+
+            
+            product.Status = newstatus;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "product status updated" });
+        }
+
+
+        [HttpGet("allProducts")]
+        public async Task<IActionResult> showProduct()
+        {
+            var products = await _context.Products.
+                Include(p => p.User).
+                Where(p => p.Status == "Approved" && p.User.IsActive == true).
+                Select(p => new
+                {
+                    p.Name,
+                    p.Description,
+                    p.Price,
+                    p.Stock,
+                    sellerName = p.User.Name
+                }).ToListAsync();
+
+
+            return Ok(products);
+
+        }
     }
+
 }

@@ -38,5 +38,37 @@ namespace Ecommerce_web_api.Controllers
 
             return Ok(sellers);
         }
+
+        [HttpPut("disable-seller/{id}")]
+        public async Task<IActionResult> DisableSeller(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            user.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Seller disabled successfully");
+        }
+
+        [HttpPut("enable-seller/{id}")]
+        public async Task<IActionResult> EnableSeller(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound("seller not found");
+
+            user.IsActive = true;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Seller enabled");
+        }
     }
+
+
 }

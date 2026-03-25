@@ -1,4 +1,5 @@
-﻿using Ecommerce_web_api.DTOs.Auth;
+﻿using Azure;
+using Ecommerce_web_api.DTOs.Auth;
 using Ecommerce_web_api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -35,9 +36,14 @@ namespace Ecommerce_web_api.Controllers
         {
 
             var result = await _authService.Login(request);
-            
 
-           if (result.Message == "User not found" || result.Message == "Password is not correct")
+            if (string.IsNullOrEmpty(result.JwtToken))
+            {
+                return BadRequest(result.Message);
+            }
+
+
+            if (result.Message == "User not found" || result.Message == "Password is not correct")
                 return BadRequest(result.Message);
 
             // Create secure Cookie Options

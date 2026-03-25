@@ -66,27 +66,41 @@ namespace Ecommerce_web_api.Services
             return "Registration successful";
         }
 
-        public async Task<LoginResponseDto> Login(LoginUserDto user)
+        public async Task<LoginResponseDto> Login(LoginUserDto userExits)
         {
-            var userExists = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == user.Email);
+            var userExist = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == userExits.Email);
 
-            if (userExists == null)
+            if (userExist == null)
                 return new LoginResponseDto { Message = "User not found" };
 
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, userExists.PasswordHash);
+            //  check for disabled account
+            if (!userExist.IsActive)
+            {
+                return new LoginResponseDto
+                {
+                    Message = "Your account has been suspended. Please contact Admin."
+                };
+            }
+
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(
+                userExits.Password,
+                userExist.PasswordHash
+            );
 
             if (!isPasswordValid)
                 return new LoginResponseDto { Message = "Password is not correct" };
 
             var claims = new List<Claim>
     {
-        new Claim(ClaimTypes.Email, userExists.Email),
-        new Claim(ClaimTypes.Role, userExists.Role)
-    }; 
+        new Claim(ClaimTypes.Email, userExist.Email),
+        new Claim(ClaimTypes.Role, userExist.Role),
+        new Claim(ClaimTypes.NameIdentifier, userExist.Id.ToString()) 
+    };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"])
-);
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_config["Jwt:Key"])
+            );
 
             var creds = new SigningCredentials(
                 key,
@@ -101,16 +115,13 @@ namespace Ecommerce_web_api.Services
                 signingCredentials: creds
             );
 
-
             return new LoginResponseDto
             {
                 Message = "Login successful",
                 JwtToken = new JwtSecurityTokenHandler().WriteToken(token),
-                User = userExists
+                User = userExist
             };
-
         }
-
 
     }
   }
