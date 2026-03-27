@@ -26,5 +26,11 @@ namespace Ecommerce_web_api.Data
         }
 
         public DbSet<Products> Products { get; set; }
+
+        public DbSet<CartItem> CartItems { get; set; }
+        
+        public DbSet<Order> Orders { get; set; }
+
+        public DbSet<OrderItem> OrderItems { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace Ecommerce_web_api.Controllers
     public class ProductsController : ControllerBase
     {
 
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context; 
 
         public ProductsController(ApplicationDbContext context)
         {
@@ -91,7 +91,7 @@ namespace Ecommerce_web_api.Controllers
         }
 
 
-        [HttpGet("allProducts")]
+        [HttpGet("allProducts")]    
         public async Task<IActionResult> showProduct()
         {
             var products = await _context.Products.
@@ -99,6 +99,7 @@ namespace Ecommerce_web_api.Controllers
                 Where(p => p.Status == "Approved" && p.User.IsActive == true).
                 Select(p => new
                 {
+                    p.Id,
                     p.Name,
                     p.Description,
                     p.Price,
