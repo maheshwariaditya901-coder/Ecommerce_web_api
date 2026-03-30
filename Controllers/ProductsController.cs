@@ -104,13 +104,15 @@ namespace Ecommerce_web_api.Controllers
                     p.Description,
                     p.Price,
                     p.Stock,
-                    sellerName = p.User.Name
+                    sellerName = p.User.Name,
+                    p.ImageUrl
                 }).ToListAsync();
 
 
             return Ok(products);
 
         }
+
     }
 
 }
