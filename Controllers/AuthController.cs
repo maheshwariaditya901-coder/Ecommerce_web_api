@@ -13,8 +13,10 @@ namespace Ecommerce_web_api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
-        public AuthController(AuthService authService) { 
+        private readonly EmailService _emailService;
+        public AuthController(AuthService authService , EmailService emailService) { 
             _authService = authService;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -27,6 +29,15 @@ namespace Ecommerce_web_api.Controllers
 
             if (result != "Registration successful")
                 return BadRequest(result);
+
+            await _emailService.SendEmailAsync(
+     request.Email,
+     "Welcome to Our Platform 🎉",
+     $"<h2>Welcome, {request.Name}!</h2>" +
+     $"<p>Your account has been successfully created.</p>" +
+     $"<p>You can now login and start using our platform.</p>"
+ );
+
 
             return Ok(result);
         }
